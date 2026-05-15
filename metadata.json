@@ -1,0 +1,6 @@
+{
+  "name": "Remix: Philly Car Rentals Dashboard",
+  "description": "An internal operations dashboard for managing vehicle rentals, customer documents, and AI-powered parking ticket matching.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

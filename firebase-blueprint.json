@@ -1,0 +1,95 @@
+{
+  "entities": {
+    "Customer": {
+      "title": "Customer Profile",
+      "description": "Represents a customer in the system.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "phone": { "type": "string" },
+        "address": { "type": "string" },
+        "driverLicenseUrl": { "type": "string" },
+        "insuranceUrl": { "type": "string" },
+        "signatureUrl": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "email", "phone", "address"]
+    },
+    "Rental": {
+      "title": "Rental Record",
+      "description": "Represents a vehicle rental agreement and customer data.",
+      "type": "object",
+      "properties": {
+        "firstName": { "type": "string" },
+        "lastName": { "type": "string" },
+        "customerName": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "dob": { "type": "string" },
+        "streetAddress": { "type": "string" },
+        "city": { "type": "string" },
+        "state": { "type": "string" },
+        "postalCode": { "type": "string" },
+        "vehicle": { "type": "string" },
+        "plateNumber": { "type": "string" },
+        "startDate": { "type": "string", "format": "date-time" },
+        "endDate": { "type": "string", "format": "date-time" },
+        "submissionId": { "type": "string" },
+        "agreements": {
+          "type": "object",
+          "properties": {
+            "accidentNotification": { "type": "boolean" },
+            "killSwitch": { "type": "boolean" },
+            "underageFee": { "type": "boolean" },
+            "insuranceAck": { "type": "boolean" }
+          }
+        },
+        "status": { "type": "string", "enum": ["active", "completed", "pending", "cancelled"] },
+        "licenseFile": { "type": "string" },
+        "selfieFile": { "type": "string" },
+        "insuranceFile": { "type": "string" },
+        "signatureFile": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["customerName", "plateNumber", "startDate", "endDate", "status"]
+    },
+    "Ticket": {
+      "title": "Violation Ticket",
+      "description": "Represents a parking or speeding ticket associated with a vehicle.",
+      "type": "object",
+      "properties": {
+        "plateNumber": { "type": "string", "description": "Plate number identified from the ticket" },
+        "violationDate": { "type": "string", "format": "date-time", "description": "Date and time of the violation" },
+        "amount": { "type": "number", "description": "Fine amount on the ticket" },
+        "matchedCustomer": { "type": "string", "description": "Name of the customer matched by AI" },
+        "rentalId": { "type": "string", "description": "Reference to the active rental at the time of violation" },
+        "status": { "type": "string", "enum": ["unpaid", "paid", "contested"], "description": "Payment status of the ticket" },
+        "ticketImage": { "type": "string", "description": "URL to the uploaded ticket image" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Record creation timestamp" }
+      },
+      "required": ["plateNumber", "violationDate", "amount", "status"]
+    },
+    "Vehicle": {
+      "title": "Vehicle Fleet Item",
+      "description": "Represents a vehicle in the rental fleet.",
+      "type": "object",
+      "properties": {
+        "plateNumber": { "type": "string", "description": "Unique license plate number" },
+        "make": { "type": "string", "description": "Vehicle manufacturer" },
+        "model": { "type": "string", "description": "Vehicle model" },
+        "year": { "type": "number", "description": "Vehicle manufacture year" },
+        "color": { "type": "string", "description": "Vehicle color" },
+        "status": { "type": "string", "enum": ["available", "rented", "maintenance"], "description": "Current availability status" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Record creation timestamp" }
+      },
+      "required": ["plateNumber", "make", "model", "status"]
+    }
+  },
+  "firestore": {
+    "rentals": { "schema": "Rental", "description": "Collection of all rental agreements" },
+    "tickets": { "schema": "Ticket", "description": "Collection of traffic and parking violations" },
+    "vehicles": { "schema": "Vehicle", "description": "Inventory of vehicles in the fleet" },
+    "customers": { "schema": "Customer", "description": "Collection of customer profiles" }
+  }
+}

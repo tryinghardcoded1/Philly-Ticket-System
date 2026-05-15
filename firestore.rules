@@ -1,0 +1,104 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net: Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helpers ---
+    function isSignedIn() { 
+      return request.auth != null && request.auth.token.email_verified == true; 
+    }
+    function isValidId(id) { 
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); 
+    }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    // --- Validation Blueprints ---
+
+    function isValidRental(data) {
+      return data.keys().hasAll(['customerName', 'plateNumber', 'startDate', 'endDate', 'status'])
+        && data.customerName is string && data.customerName.size() <= 200
+        && data.plateNumber is string && data.plateNumber.size() <= 20
+        && data.status in ['active', 'completed', 'pending', 'cancelled']
+        && (data.startDate is timestamp || data.startDate == request.time)
+        && (data.endDate is timestamp || data.endDate == request.time);
+    }
+
+    function isValidNote(data) {
+      return data.keys().hasAll(['text', 'author', 'timestamp'])
+        && data.text is string && data.text.size() <= 5000
+        && data.author is string && data.author.size() <= 100
+        && (data.timestamp is timestamp || data.timestamp == request.time);
+    }
+
+    function isValidTicket(data) {
+      return data.keys().hasAll(['plateNumber', 'violationDate', 'amount', 'status'])
+        && data.plateNumber is string && data.plateNumber.size() <= 20
+        && data.amount is number && data.amount >= 0
+        && data.status in ['unpaid', 'paid', 'contested']
+        && (data.violationDate is timestamp || data.violationDate == request.time);
+    }
+
+    function isValidVehicle(data) {
+      return data.keys().hasAll(['plateNumber', 'make', 'model', 'status'])
+        && data.plateNumber is string && data.plateNumber.size() <= 20
+        && data.make is string && data.make.size() <= 50
+        && data.model is string && data.model.size() <= 50
+        && data.status in ['available', 'rented', 'maintenance'];
+    }
+
+    function isValidCustomer(data) {
+      return data.keys().hasAll(['name', 'email', 'phone', 'address'])
+        && data.name is string && data.name.size() <= 200
+        && data.email is string && data.email.size() <= 200
+        && data.phone is string && data.phone.size() <= 20
+        && data.address is string && data.address.size() <= 300;
+    }
+
+    // --- Collections ---
+
+    match /rentals/{rentalId} {
+      allow read: if isSignedIn();
+      allow create: if isValidRental(incoming()) && isValidId(rentalId);
+      allow update: if isSignedIn() && isValidRental(incoming());
+      allow delete: if isSignedIn();
+
+      match /notes/{noteId} {
+        allow read: if isSignedIn();
+        allow create: if isSignedIn() && isValidNote(incoming()) && isValidId(noteId);
+        allow update: if isSignedIn() && isValidNote(incoming());
+        allow delete: if false;
+      }
+    }
+
+    match /tickets/{ticketId} {
+      allow read: if isSignedIn();
+      allow create: if isValidTicket(incoming()) && isValidId(ticketId);
+      allow update: if isSignedIn() && isValidTicket(incoming());
+
+      match /notes/{noteId} {
+        allow read: if isSignedIn();
+        allow create: if isSignedIn() && isValidNote(incoming()) && isValidId(noteId);
+        allow update: if isSignedIn() && isValidNote(incoming());
+        allow delete: if false;
+      }
+    }
+
+    match /vehicles/{vehicleId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidVehicle(incoming()) && isValidId(vehicleId);
+      allow update: if isSignedIn() && isValidVehicle(incoming())
+        && incoming().plateNumber == existing().plateNumber;
+    }
+
+    match /customers/{customerId} {
+      allow read: if isSignedIn();
+      allow create: if isValidCustomer(incoming()) && isValidId(customerId);
+      allow update: if isSignedIn() && isValidCustomer(incoming());
+      allow delete: if isSignedIn();
+    }
+  }
+}
